@@ -11,19 +11,47 @@ import (
 	"time"
 )
 
-const (
-	fileSuffix = ".prof"
+var (
+	pprofArgs = []string{
+		"tool",
+		"pprof",
+		"-raw",
+	}
+
+	fileSuffix string
 )
 
-var pprofArgs = []string{
-	"tool",
-	"pprof",
-	"-raw",
+// Start pprof to collect web server profile
+func Start(opts *Options) {
+	log.Println("pprof start: ", *opts)
+
+	// setting options here
+	fileSuffix = opts.profSuffix
+
+	ticker := time.NewTicker(time.Duration(opts.tickerSecond) * time.Second)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				b, err := raw([]string{opts.serverURL})
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+				err = save(opts.filepath, b)
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+			}
+		}
+	}()
+
 }
 
-func raw(opts ...string) ([]byte, error) {
+func raw(opts []string) ([]byte, error) {
 
-	allArgs := make([]string, len(pprofArgs)+len(opts))
+	allArgs := make([]string, 0, len(pprofArgs)+len(opts))
 	allArgs = append(allArgs, pprofArgs...)
 	allArgs = append(allArgs, opts...)
 
