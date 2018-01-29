@@ -22,6 +22,8 @@ type Options struct {
 	profSuffix   string // the url of pprof profile
 	tickerSecond int32  // the second of cllection profile
 	filepath     string // the filepath to save profile
+	needSave     bool   // should save the profile message to filepath, will not saved
+	targetSVG    string // the file name of target flamegraph svg
 }
 
 func (o *Options) String() string {
@@ -54,10 +56,14 @@ func NewOption(opt ...Option) *Options {
 		opts.filepath = defaultFilepath
 	}
 
+	if opts.targetSVG == "" {
+		opts.targetSVG = "./out.svg"
+	}
+
 	return opts
 }
 
-// SetServerURL setting your web server url with ip and port
+// SetServerURL setting your web server url with ip and port or host name
 func SetServerURL(ru string) Option {
 	u, e := url.Parse(ru)
 	if e != nil {
@@ -96,5 +102,17 @@ func SetFilepath(path string) Option {
 
 	return func(o *Options) {
 		o.filepath = path
+	}
+}
+
+func SetNeedSave(saved bool) Option {
+	return func(o *Options) {
+		o.needSave = saved
+	}
+}
+
+func SetTargetSVG(name string) Option {
+	return func(o *Options) {
+		o.targetSVG = name
 	}
 }
